@@ -34,10 +34,6 @@
                 android:resource="@xml/fortune_widget_info" />
         </receiver>
 
-        <activity
-            android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings" >
-        </activity>
     </application>
 
 </manifest>
