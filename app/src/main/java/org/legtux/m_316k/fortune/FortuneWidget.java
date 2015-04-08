@@ -43,4 +43,3 @@ public class FortuneWidget extends AppWidgetProvider {
     }
 }
 
-
