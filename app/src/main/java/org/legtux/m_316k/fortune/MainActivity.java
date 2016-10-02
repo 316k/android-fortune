@@ -1,5 +1,7 @@
 package org.legtux.m_316k.fortune;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -12,30 +14,35 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.content.Intent;
 
+import static android.R.attr.id;
+
 public class MainActivity extends ActionBarActivity {
     private Fortune fortune;
     private TextView fortuneDisplayer;
     private Button prevFortune;
     private Button nextFortune;
     private ShareActionProvider shareActionProvider;
+    private MenuItem tldr;
+    private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        this.preferences = getApplicationContext().getSharedPreferences("general", Context.MODE_PRIVATE);
 
         Fortune.setContext(getApplicationContext());
 
         this.fortuneDisplayer = (TextView) findViewById(R.id.fortuneDisplayer);
 
-        this.fortune = Fortune.instance();
+        this.fortune = Fortune.instance(preferences.getBoolean("tldr", false));
         ((TextView) findViewById(R.id.fortuneDisplayer)).setText(this.fortune.current());
 
         this.nextFortune = (Button) findViewById(R.id.newFortune);
         nextFortune.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fortuneDisplayer.setText(fortune.next());
+                fortuneDisplayer.setText(fortune.next(preferences.getBoolean("tldr", false)));
                 prevFortune.setEnabled(true);
             }
         });
@@ -79,6 +86,27 @@ public class MainActivity extends ActionBarActivity {
                 return true;
             }
         });
+
+        this.tldr = (MenuItem) menu.findItem(R.id.menu_tldr);
+        Boolean tldr_checked = preferences.getBoolean("tldr", false);
+        tldr.setChecked(tldr_checked);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.menu_tldr) {
+            Boolean tldr_checked = !preferences.getBoolean("tldr", false);
+
+            SharedPreferences.Editor editor = preferences.edit();
+
+            editor.putBoolean("tldr", tldr_checked);
+
+            editor.commit();
+
+            tldr.setChecked(tldr_checked);
+        }
 
         return true;
     }

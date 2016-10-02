@@ -8,8 +8,15 @@
         android:title="@string/action_about"
         app:showAsAction="never" />
     <item
+        android:title="tl;dr"
+        android:orderInCategory="101"
+        android:checkable="true"
+        android:id="@+id/menu_tldr"
+        android:layout_height="match_parent" />
+    <item
         android:id="@+id/menu_item_share"
         android:actionProviderClass="android.widget.ShareActionProvider"
         android:showAsAction="ifRoom"
-        android:title="@string/action_share" />
+        android:title="@string/action_share"
+        tools:ignore="AppCompatResource" />
 </menu>

@@ -3,8 +3,12 @@ package org.legtux.m_316k.fortune;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.os.Environment;
 import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -14,7 +18,10 @@ import java.util.Stack;
 
 
 public class Fortune {
-    private ArrayList<String> enteries;
+
+    private int TLDR_LENGTH = 200;
+
+    private ArrayList<String> entries;
     private static Fortune instance;
     private static Context context;
     private HashSet<String> categories;
@@ -30,16 +37,16 @@ public class Fortune {
         Fortune.context = context;
     }
 
-    public static Fortune instance() {
+    public static Fortune instance(Boolean tldr) {
         if(Fortune.instance == null) {
-            Fortune.instance = new Fortune();
+            Fortune.instance = new Fortune(tldr);
         }
         return Fortune.instance;
     }
 
-    public Fortune() {
+    public Fortune(Boolean tldr) {
         this.random = new Random();
-        this.enteries = new ArrayList<>();
+        this.entries = new ArrayList<>();
         this.previous = new Stack<>();
         this.next = new Stack<>();
 
@@ -55,7 +62,9 @@ public class Fortune {
                 String content = new String(b);
 
                 for (String entry : content.split("\n%\n")) {
-                    this.enteries.add(entry.trim());
+                    if(entry.trim().length() > 0) {
+                        this.entries.add(entry.trim());
+                    }
                 }
             }
 
@@ -63,7 +72,45 @@ public class Fortune {
             // Gotta catch'em all
             Log.e("Meurt", e.getMessage());
         }
-        this.fortune = this.random.nextInt(this.enteries.size());
+
+        File dir = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), "fortunes");
+
+        if(dir.exists()) {
+
+            String[] customFiles = dir.list();
+
+            for (String name : customFiles) {
+                File f = new File(dir.getAbsolutePath(), name);
+
+                StringBuilder content = new StringBuilder();
+
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(f));
+                    String line;
+
+                    while ((line = br.readLine()) != null) {
+                        content.append(line);
+                        content.append('\n');
+                    }
+
+                    br.close();
+
+                    for (String entry : content.toString().split("\n%\n")) {
+                        if (entry.trim().length() > 0) {
+                            this.entries.add(entry.trim());
+                        }
+                    }
+                } catch (Exception e) {
+                    //You'll need to add proper error handling here
+                    // No I don't
+                    Log.e("Meurt", e.getMessage());
+                }
+            }
+        }
+
+        this.fortune = this.random.nextInt(this.entries.size());
+        while(tldr && this.current().length() > TLDR_LENGTH)
+            this.fortune = this.random.nextInt(this.entries.size());
     }
 
     public String previous() {
@@ -73,14 +120,18 @@ public class Fortune {
     }
 
     public String current() {
-        return this.enteries.get(this.fortune);
+        return this.entries.get(this.fortune);
 
     }
-    public String next() {
+    public String next(Boolean tldr) {
         this.previous.push(this.fortune);
 
         if(this.next.empty()) {
-            this.fortune = this.random.nextInt(this.enteries.size());
+            this.fortune = this.random.nextInt(this.entries.size());
+
+            while(tldr && this.current().length() > TLDR_LENGTH)
+                this.fortune = this.random.nextInt(this.entries.size());
+
         } else {
             this.fortune = this.next.pop();
         }
